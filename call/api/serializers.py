@@ -3,14 +3,10 @@ from .models import Events, ClientPhones, Clients, EmployeesPhones, Employee, St
 
 
 class ClientsSerializer(serializers.ModelSerializer):
-    # phones = serializers.SerializerMethodField(required=False)
 
     class Meta:
         model = Clients
         fields = ("first_name", "last_name", "description")
-
-    # def get_phones(self, instance):
-    #    return 123
 
     def to_representation(self, instance):
         # объекты в примитивы
@@ -19,28 +15,8 @@ class ClientsSerializer(serializers.ModelSerializer):
         return inst
 
     def to_internal_value(self, data):
-        # преобразует данные в во внутренние объекты
-        # print("internal data", data)
-        #if "phones" in data:
-        # phones = data.pop("phones", None)
         instance = super().to_internal_value(data)
-        # if phones:
-        #     instance.phones.add(phones)
-
-        # print("internal", instance)
         return instance
-    #
-    # def save(self, **kwargs):
-    #     # try to update
-    #     # if fail then create
-    #     # return instance
-    #     return super().save(**kwargs)
-    #
-    # def update(self, instance, validated_data):
-    #     return super().update(instance, validated_data)
-    #
-    # def create(self, validated_data):
-    #     return super().create(validated_data)
 
 
 class EmployeeSerializer(serializers.ModelSerializer):
@@ -68,19 +44,15 @@ class EventsSerializer(serializers.ModelSerializer):
         fields = ("id", "id_asterisk", "id_client", "id_employee", "call_recording", "id_status")
 
     def create(self, validated_data):
-        print('create')
         Events.objects.create(**validated_data)
         return validated_data
 
     def to_representation(self, instance):
-        print('to_representation')
         ret = super().to_representation(instance)
         ret["id_status"] = Status.objects.get(id=ret["id_status"]).name
         return ret
 
     def to_internal_value(self, data):
-        print('to_internal_value')
-        print(data)
         number_client = data.pop("number_client", None)
         number_employee = data.pop("number_employee", None)
         instance = super().to_internal_value(data)
@@ -91,9 +63,7 @@ class EventsSerializer(serializers.ModelSerializer):
             else:
                 id_clients = Clients.objects.create()
                 client_phones = ClientPhones.objects.create(phone_number=number_client, id_clients=id_clients)
-            # print(client_phones)
             instance['id_client'] = client_phones.id_clients
-
         if number_employee:
             if EmployeesPhones.objects.filter(sip_phone=number_employee).exists():
                 employee_phone = EmployeesPhones.objects.get(sip_phone=number_employee)
@@ -104,19 +74,7 @@ class EventsSerializer(serializers.ModelSerializer):
                 group_name = GroupName.objects.get_or_create(name='ALL')
                 group = Group.objects.create(id_group_name=group_name[0], id_employees_phones=employee_phone)
             instance['id_employee'] = employee_phone.id_employee
-
-        print('instance=', instance)
         return instance
-
-    def update(self, instance, validated_data):
-        print('TUT')
-        inst = super().update(instance, validated_data)
-        # print(inst)
-        return instance
-
-    def save(self, **kwargs):
-        print('TUUTUTUUT')
-        return super().save(**kwargs)
 
 # class ClientNumberSerializer(serializers.ModelSerializer):
 #     class Meta:
