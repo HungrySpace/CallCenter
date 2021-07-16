@@ -1,0 +1,60 @@
+{% extends 'appCallCentr/base.html' %}
+
+{% block 'body' %}
+<br>
+
+<div class="row">
+    <div class="col-md-1">
+    </div>
+    <div class="col-md-6">
+    <form method="POST" action="">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="first_name" class="form-label">Имя</label>
+            <input type="text" class="form-control" id="first_name" name="first_name" value="{{ card_client.first_name }}">
+            <label for="last_name" class="form-label">Фамилия</label>
+            <input type="text" class="form-control" id="last_name" name="last_name" value="{{ card_client.last_name }}">
+            <label for="description" class="form-label">Описание</label>
+            <textarea class="form-control" id="description" placeholder="Описание" name="description">{{ card_client.description }}</textarea>
+        </div>
+        <div class="mb-3">
+            <label for="email" class="form-label">Электронная почта</label>
+            <input type="email" class="form-control" id="email" aria-describedby="emailHelp" name="email" value="{{ card_client.email }}">
+            <div id="emailHelp" class="form-text">Мы никогда никому не передадим вашу электронную почту.</div>
+        </div>
+        <div class="mb-3">
+            {% for i, num in numbers %}
+                <p><input type="text" class="mask-phone form-control" placeholder="Номер телефона" name="number_{{ i }}" value="{{ num.phone_number }}"></p>
+            {% endfor %}
+            <div id="room_fileds">
+                <div class="content">
+                    <!--Тут автоматом добавляются поля для номеров-->
+                </div>
+            </div>
+        </div>
+
+        <p>
+        <input type="button" class="btn btn-secondary" id="more_fields" onclick="add_fields();" value="Добавить номер" />
+        </p>
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+    </form>
+    </div>
+
+    <div class="col-md-4">
+    </div>
+    <script>
+        var room = 0;
+        if (numbers.count >= 0) {
+          room = numbers.count;
+        }
+        function add_fields() {
+
+            var objTo = document.getElementById('room_fileds')
+            var divtest = document.createElement("div");
+            divtest.innerHTML = '<div class="label"></div><div class="content"><span><p><input type="text" class="mask-phone form-control" placeholder="Номер телефона" name="number_' + room +'" value=""></p></span><span><small></small></span></div>';
+            objTo.appendChild(divtest);
+            room++;
+        }
+    </script>
+</div>
+{% endblock %}

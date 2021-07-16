@@ -1,0 +1,76 @@
+{% extends 'appCallCentr/base.html' %}
+
+{% block 'body' %}
+
+<div class="row">
+    <div class="col-md-5">
+        <p><h3>Пропущеные вызовы</h3></p>
+        <div class="miss" id="miss" name="miss">
+
+        </div>
+
+    </div>
+    <div class="col-md-4">
+    </div>
+    <div class="col-md-2">
+        <div class="events" id="events" name="events">
+
+        </div>
+    </div>
+</div>
+<!-- <meta http-equiv="Refresh" content="2" /> -->
+
+
+
+
+<script>
+    function worker(){
+         var url =  'api/events/details';
+
+         $.ajax({
+          type:'get',
+          url: url,
+          async: true,
+          success: function(data) {
+<!--          var $dtr = $('.events', {'data': data});-->
+<!--          $('.events').html($dtr);-->
+<!--          console.log($dtr)-->
+          var value = ""
+          var table = '<table class="table"><thead><tr><th scope="col">#</th><th scope="col">Имя</th><th scope="col">Фамилия</th><th scope="col">Номер</th><th scope="col">Дата</th></tr></thead><tbody>'
+          var ii = 1
+
+          for(var i = 0; i< data.length; i++)
+          {
+            console.log()
+            if (data[i].event_id.state == 'Идёт вызов') {
+                value +='<p><div class="card"><div class="card-header">' + data[i].number.phone_number + '</div><div class="card-body">'
+                value +='<h5 class="card-title">' + data[i].number.client_id.first_name + " " + data[i].number.client_id.last_name + '</h5>'
+                value +='<p class="card-text">' + data[i].number.client_id.description + '</p>'
+                value +='<a href="#" class="btn btn-primary">Принять вызов</a></div></div></p>'
+            } else if (data[i].number_sip == '0') {
+
+                table += '<tr>'
+                table += '  <th scope="row">' + ii + '</th>'
+                table += '  <td>' + data[i].number.client_id.first_name + '</td>'
+                table += '  <td>' + data[i].number.client_id.last_name + '</td>'
+                table += '  <td>' + data[i].number.phone_number + '</td>'
+                table += '  <td>' + data[i].date + '</td>'
+                table += '</tr>'
+                ii += 1
+            }
+          }
+          table += '</tbody></table>'
+          $('.events').html(value);
+          $('.miss').html(table);
+            console.log(data)
+          },
+                complete: function() {
+                setTimeout(worker, 3000);
+               }
+          });
+         }
+         $(document).ready(function(){
+         setTimeout(worker, 3000);
+         });
+</script>
+{% endblock %}
