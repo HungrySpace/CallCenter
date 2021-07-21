@@ -9,6 +9,8 @@ from django.urls import path
 
 urlpatterns = [
     path('events', views.EventsViews.as_view()),
+    path('client', views.ClientCardCreateGet.as_view()),
+    path('client/<int:pk>', views.ClientCardEditingDelete.as_view()),
 ]
 
 #urlpatterns = router.urls

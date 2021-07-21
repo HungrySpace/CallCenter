@@ -5,6 +5,17 @@
 <div class="row">
     <div class="col-md-5">
         <p><h3>Пропущеные вызовы</h3></p>
+        <div class="jopa">
+            <div class="card">
+                <div class="card-header">
+                    asd
+                </div>
+                <div class="card-body">
+                    123
+                </div>
+            </div>
+        </div>
+
         <div class="miss" id="miss" name="miss">
 
         </div>
@@ -15,6 +26,7 @@
     <div class="col-md-2">
         <div class="events" id="events" name="events">
 
+
         </div>
     </div>
 </div>
@@ -22,47 +34,58 @@
 
 
 
-
 <script>
     function worker(){
-         var url =  'api/events/details';
+         var url =  'api/events';
 
          $.ajax({
           type:'get',
           url: url,
           async: true,
           success: function(data) {
-<!--          var $dtr = $('.events', {'data': data});-->
-<!--          $('.events').html($dtr);-->
-<!--          console.log($dtr)-->
-          var value = ""
-          var table = '<table class="table"><thead><tr><th scope="col">#</th><th scope="col">Имя</th><th scope="col">Фамилия</th><th scope="col">Номер</th><th scope="col">Дата</th></tr></thead><tbody>'
-          var ii = 1
+          var html = JSON.stringify(data, null, 2)
 
-          for(var i = 0; i< data.length; i++)
-          {
-            console.log()
-            if (data[i].event_id.state == 'Идёт вызов') {
-                value +='<p><div class="card"><div class="card-header">' + data[i].number.phone_number + '</div><div class="card-body">'
-                value +='<h5 class="card-title">' + data[i].number.client_id.first_name + " " + data[i].number.client_id.last_name + '</h5>'
-                value +='<p class="card-text">' + data[i].number.client_id.description + '</p>'
-                value +='<a href="#" class="btn btn-primary">Принять вызов</a></div></div></p>'
-            } else if (data[i].number_sip == '0') {
+<!--          $("#events").html("<p>" + data + "</p>");-->
 
-                table += '<tr>'
-                table += '  <th scope="row">' + ii + '</th>'
-                table += '  <td>' + data[i].number.client_id.first_name + '</td>'
-                table += '  <td>' + data[i].number.client_id.last_name + '</td>'
-                table += '  <td>' + data[i].number.phone_number + '</td>'
-                table += '  <td>' + data[i].date + '</td>'
-                table += '</tr>'
-                ii += 1
-            }
-          }
-          table += '</tbody></table>'
-          $('.events').html(value);
-          $('.miss').html(table);
-            console.log(data)
+            var list = document.getElementById('events');
+
+            data.map(function (el) {
+                var div_card = document.createElement('div');
+                div_card.className = 'card';
+
+                var div_header = document.createElement('div');
+                div_header.className = 'card-header';
+                var header = document.createTextNode('Имя: ' + el.id_client.first_name + ' Фамилия: ' + el.id_client.last_name);
+                div_header.appendChild(header);
+
+                var div_body = document.createElement('div');
+                div_body.className = 'card-body';
+                console.log(el)
+                el.id_client.phones.map(function (phone) {
+
+                    var body = document.createTextNode('Телефон: ' + phone);
+                    div_body.appendChild(body);
+                });
+                var body = document.createTextNode('Статус: ' + el.id_status);
+                    div_body.appendChild(body);
+
+                div_card.appendChild(div_header);
+                div_card.appendChild(div_body);
+<!--                var contact_name = document.createTextNode('Имя:' + el.name);-->
+<!--                var contact_email = document.createTextNode('Email:' + el.email);-->
+<!--                div_contact.appendChild(contact_info);-->
+<!--                div_contact.appendChild(document.createElement("p"));-->
+<!--                div_contact.appendChild(contact_name);-->
+<!--                div_contact.appendChild(document.createElement("br"));-->
+<!--                div_contact.appendChild(contact_email);-->
+<!--                div_contact.appendChild(document.createElement("br"));-->
+<!--                var img = document.createElement("img");-->
+<!--                img.src = el.avatar;-->
+<!--                div_contact.appendChild(img);-->
+<!--                list.appendChild(div_card);-->
+                    list.innerHTML=div_card.innerHTML;
+
+            });
           },
                 complete: function() {
                 setTimeout(worker, 3000);

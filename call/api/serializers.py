@@ -1,22 +1,92 @@
 from rest_framework import serializers
 from .models import Events, ClientPhones, Clients, EmployeesPhones, Employee, Status, Position, GroupName, Group
+from rest_framework.response import Response
+
+
+def get_phones(instance):
+    try:
+        phones = [i["phone_number"] for i in instance.phones.all().values()]
+    except:
+        phones = None
+    return phones
+
+
+class ClientPhonesSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ClientPhones
+        fields = "__all__"
+
+
+class ClientsTestSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Clients
+        fields = ("id", "first_name", "last_name", "description")
+
+    def to_representation(self, instance):
+        inst = super().to_representation(instance)
+        phones = get_phones(instance)
+        if phones:
+            inst["phones"] = phones
+        return inst
+
+    def to_internal_value(self, data):
+        ret = super().to_internal_value(data)
+        phones = data.get("phones", None)
+        if phones:
+            ret["phones"] = set(phones)
+        return ret
+
+    def update(self, instance, validated_data):
+        phones_model = set(i.phone_number for i in ClientPhones.objects.filter(id_clients=instance))
+        phones = validated_data.pop("phones", None)
+        if phones:
+            for phone in phones_model.symmetric_difference(phones):
+                if not ClientPhones.objects.filter(phone_number=phone, id_clients=instance).exists():
+                    if not ClientPhones.objects.filter(phone_number=phone).exists():
+                        ClientPhones.objects.create(phone_number=phone, id_clients=instance)
+                else:
+                    ClientPhones.objects.get(phone_number=phone).delete()
+        inst = super().update(instance, validated_data)
+
+        return inst
 
 
 class ClientsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Clients
-        fields = ("first_name", "last_name", "description")
+        fields = ("id", "first_name", "last_name", "description")
 
     def to_representation(self, instance):
         # объекты в примитивы
         inst = super().to_representation(instance)
-        inst["phones"] = [i["phone_number"] for i in instance.phones.all().values()]
+        # при гет запросе все ок, но при пост теряет телефоны...
+        phones = get_phones(instance)
+        if phones:
+            inst["phones"] = phones
+
         return inst
 
     def to_internal_value(self, data):
-        instance = super().to_internal_value(data)
-        return instance
+        ret = super().to_internal_value(data)
+        ret["phones"] = []
+
+        phones = data.get("phones", None)
+        if phones:
+            for phone in phones:
+                if not ClientPhones.objects.filter(phone_number=phone).exists():
+                    ret["phones"].append(phone)
+        return ret
+
+    def create(self, validated_data):
+        phones = validated_data.pop("phones", None)
+        client_card = Clients.objects.create(**validated_data)
+        if phones:
+            for phone in set(phones):
+                ClientPhones.objects.create(id_clients=client_card, phone_number=phone)
+        return validated_data
 
 
 class EmployeeSerializer(serializers.ModelSerializer):
@@ -43,10 +113,6 @@ class EventsSerializer(serializers.ModelSerializer):
         model = Events
         fields = ("id", "id_asterisk", "id_client", "id_employee", "call_recording", "id_status")
 
-    def create(self, validated_data):
-        Events.objects.create(**validated_data)
-        return validated_data
-
     def to_representation(self, instance):
         ret = super().to_representation(instance)
         ret["id_status"] = Status.objects.get(id=ret["id_status"]).name
@@ -55,7 +121,7 @@ class EventsSerializer(serializers.ModelSerializer):
     def to_internal_value(self, data):
         number_client = data.pop("number_client", None)
         number_employee = data.pop("number_employee", None)
-        instance = super().to_internal_value(data)
+        ret = super().to_internal_value(data)
         if number_client:
             if ClientPhones.objects.filter(phone_number=number_client).exists():
                 client_phones = ClientPhones.objects.get(phone_number=number_client)
@@ -63,7 +129,7 @@ class EventsSerializer(serializers.ModelSerializer):
             else:
                 id_clients = Clients.objects.create()
                 client_phones = ClientPhones.objects.create(phone_number=number_client, id_clients=id_clients)
-            instance['id_client'] = client_phones.id_clients
+            ret['id_client'] = client_phones.id_clients
         if number_employee:
             if EmployeesPhones.objects.filter(sip_phone=number_employee).exists():
                 employee_phone = EmployeesPhones.objects.get(sip_phone=number_employee)
@@ -73,61 +139,9 @@ class EventsSerializer(serializers.ModelSerializer):
                 employee_phone = EmployeesPhones.objects.create(sip_phone=number_employee, id_employee=employee)
                 group_name = GroupName.objects.get_or_create(name='ALL')
                 group = Group.objects.create(id_group_name=group_name[0], id_employees_phones=employee_phone)
-            instance['id_employee'] = employee_phone.id_employee
-        return instance
+            ret['id_employee'] = employee_phone.id_employee
+        return ret
 
-# class ClientNumberSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = ClientNumber
-#         fields = "__all__"
-
-
-# class ClientsSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Client
-#         fields = ['first_name', 'last_name', 'email', 'job_title', 'description']
-#
-#
-# class PhonesSerializer(serializers.ModelSerializer):
-#     client_id = ClientsSerializer(required=False)
-#
-#     class Meta:
-#         model = ClientNumber
-#         fields = ['phone_number', 'client_id']
-#
-#     def create(self, validated_data):
-#         validated_data['client_id'] = Client.objects.create(**validated_data['client_id'])
-#         ClientNumber.objects.create(**validated_data)
-#         return validated_data
-#
-#
-# class StatesSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = States
-#         fields = ['id', 'state']
-#
-#
-# class EventsSerializer(serializers.ModelSerializer):
-#     number = PhonesSerializer(required=False)
-#     event_id = StatesSerializer(required=False)
-#
-#     class Meta:
-#         model = CallEvents
-#         fields = ['aster_id', 'number', 'number_sip', 'date', 'event_id', 'date_end']
-#
-#     # записываем новый ивент
-#     def create(self, validated_data):
-#         # проверяем есть ли такой номер телефона в звписной книге
-#         print('**********************************************')
-#         # print(validated_data)
-#         print(validated_data)
-#         print('**********************************************')
-#         if ClientNumber.objects.filter(phone_number=int(validated_data['number']['phone_number'])).exists():
-#             validated_data['number'] = ClientNumber.objects.get(phone_number=validated_data['number']['phone_number'])
-#         else:
-#             validated_data['number']['client_id'] = Client.objects.create(**validated_data['number']['client_id'])
-#             validated_data['number'] = ClientNumber.objects.create(**validated_data['number'])
-#
-#         validated_data['event_id'] = States.objects.get(id=validated_data['event_id']['state'])
-#         CallEvents.objects.create(**validated_data)
-#         return validated_data
+    def create(self, validated_data):
+        Events.objects.create(**validated_data)
+        return validated_data
