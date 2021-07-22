@@ -3,44 +3,17 @@
 {% block 'body' %}
 <div class="row">
     <div class="col-md-6">
-        <table class="table table-striped table-hover">
+        <table id ="table_contacts" class="table table-striped table-hover">
           <thead>
             <tr>
                 <th scope="col">Имя</th>
                 <th scope="col">Фамилия</th>
-                <th scope="col">Электронная почта</th>
                 <th scope="col">Описание</th>
-                <th scope="col">Номер</th>
+                <th scope="col">Номера</th>
+                <th scope="col">#</th>
             </tr>
           </thead>
-          <tbody>
-            {% for key, value in dict_contact.items %}
-                <tr>
-                    <td>
-                        <div class="puk">
-                            <a type="button" href="/editing_contact/{{ key.id }}" class="btn btn-primary">!</a>  {{ key.first_name }}
-                        </div>
-                    </td>
-                  <td>
-                      {{ key.last_name }}
-                  </td>
-                  <td>
-                      {{ key.email }}
-                  </td>
-                  <td>
-                      {{ key.description }}
-                  </td>
-                  <td>
 
-                      {% for num in value %}
-                        <p>
-                            {{ num.phone_number }}
-                        </p>
-                      {% endfor %}
-                  </td>
-                </tr>
-            {% endfor %}
-          </tbody>
         </table>
     </div>
     <div class="col-md-2">
@@ -58,6 +31,9 @@
     </div>
 </div>
 
+
+
+
 <!-- Модальное окно -->
 <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog">
@@ -68,23 +44,21 @@
       </div>
       <div class="modal-body">
           <!-- форма ввода -->
-          <form method="POST" action="/contact_book">
+          <form id="form_client" method="POST" action="https://reqres.in/api/users">
               {% csrf_token %}
               <div class="mb-3">
                 <label for="first_name" class="form-label">Имя</label>
-                <input type="text" class="form-control" id="first_name" name="first_name">
+                <input type="text" class="form-control first_name" id="first_name" value="" name="first_name">
                 <label for="last_name" class="form-label">Фамилия</label>
-                <input type="text" class="form-control" id="last_name" name="last_name">
+                <input type="text" class="form-control last_name" id="last_name" value="" name="last_name">
                 <label for="description" class="form-label">Описание</label>
-                <textarea class="form-control" id="description" placeholder="Описание" name="description" ></textarea>
+                <textarea class="form-control description" id="description" placeholder="Описание" name="description" ></textarea>
               </div>
               <div class="mb-3">
-                <label for="email" class="form-label">Электронная почта</label>
-                <input type="email" class="form-control" id="email" aria-describedby="emailHelp" name="email">
-                <div id="emailHelp" class="form-text">Мы никогда никому не передадим вашу электронную почту.</div>
+
               </div>
-              <div class="mb-3">
-                <input type="text" class="mask-phone form-control" id="number" placeholder="Номер телефона" name="number_0">
+              <div class="mb-3 number">
+                <!-- <input type="text" class="mask-phone form-control" id="number" placeholder="Номер телефона" name="number_0"> -->
               </div>
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
               <button type="submit" class="btn btn-primary">Отправить</button>
@@ -93,4 +67,79 @@
     </div>
   </div>
 </div>
+
+<script type="text/javascript">
+  $.ajax({
+    type: "get",
+    url: 'http://127.0.0.1:8000/api/clients',
+    async: true,
+    success: function(data){
+      html = JSON.stringify(data, null, 2)
+      // console.log(html);
+      table_contacts = document.getElementById('table_contacts');
+      tbody_main = document.createElement('tbody');
+
+      data.map(function(el){
+        tr_main = document.createElement('tr');
+
+        td_first_name = document.createElement('td');
+        first_name = document.createTextNode(el.first_name);
+        td_first_name.appendChild(first_name);
+
+        td_last_name = document.createElement('td');
+        last_name = document.createTextNode(el.last_name);
+        td_last_name.appendChild(last_name);
+
+        td_discription = document.createElement('td');
+        description = document.createTextNode(el.description);
+        td_discription.appendChild(description);
+
+        td_phones = document.createElement('td');
+
+        el.phones.map(function(ph){
+          p_phone = document.createElement('p');
+          phone = document.createTextNode(ph);
+          p_phone.appendChild(phone);
+          td_phones.appendChild(p_phone);
+        });
+
+        td_edit = document.createElement('td');
+        // td_edit.innerHTML = '<button id="' + el.id + '" value="' + el.id + '" class="btn btn-primary jopa_tut">edit</button>'
+        td_edit.innerHTML = `<button id="" class="btn btn-primary" data-bs-toggle="modal" onClick="tutf(${el.id})" data-bs-target="#exampleModal">edit</button>`
+
+        tr_main.appendChild(td_first_name);
+        tr_main.appendChild(td_last_name);
+        tr_main.appendChild(td_discription);
+        tr_main.appendChild(td_phones);
+        tr_main.appendChild(td_edit);
+
+        tbody_main.appendChild(tr_main);
+      });
+      table_contacts.appendChild(tbody_main);
+    }
+  });
+
+  // var elements = document.getElementsByClassName('jopa_tut');
+  // console.log(elements);
+
+  function tutf(id){
+    $.ajax({
+      type: "get",
+      url: `http://127.0.0.1:8000/api/client/${id}`,
+      async: true,
+      success: function(data){
+        document.getElementById('first_name').value = data.first_name
+        document.getElementById('last_name').value = data.last_name
+        document.getElementById('description').innerText = data.description
+        form_client = document.getElementById('form_client')
+        form_client.method = "PUT"
+        form_client.action = `/api/client/${id}`
+        console.log(form_client);
+      }
+
+    });
+  }
+
+</script>
+
 {% endblock %}

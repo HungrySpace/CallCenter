@@ -3,97 +3,107 @@
 {% block 'body' %}
 
 <div class="row">
-    <div class="col-md-5">
-        <p><h3>Пропущеные вызовы</h3></p>
-        <div class="jopa">
-            <div class="card">
-                <div class="card-header">
-                    asd
-                </div>
-                <div class="card-body">
-                    123
-                </div>
-            </div>
-        </div>
-
-        <div class="miss" id="miss" name="miss">
-
-        </div>
+  <div class="col-md-5">
+  </div>
+  <div class="col-md-4">
+  </div>
+  <div class="col-md-3">
+    <div class="events" id="events" name="events">
 
     </div>
-    <div class="col-md-4">
-    </div>
-    <div class="col-md-2">
-        <div class="events" id="events" name="events">
-
-
+    <div aria-live="polite" aria-atomic="true" class="bg-dark position-relative bd-example-toasts">
+      <div class="toast-container position-absolute p-3" id="toastPlacement">
+        <div class="toast">
+          <div class="toast-header">
+            <img src="..." class="rounded me-2" alt="...">
+            <strong class="me-auto">Bootstrap</strong>
+            <small>11 мин назад</small>
+          </div>
+          <div class="toast-body">
+            Привет мир! Это тост-сообщение.
+          </div>
         </div>
+      </div>
     </div>
+  </div>
 </div>
-<!-- <meta http-equiv="Refresh" content="2" /> -->
+
+<script type="text/javascript">
+  worker();
+
+  function worker(){
+    // url = 'http://127.0.0.1:8000/api/events';
+    $.ajax({
+      type: "get",
+      url: 'http://127.0.0.1:8000/api/events',
+      async: true,
+      success: function(data){
+        // html = JSON.stringify(data, null, 2)
+        // console.log(html);
+        $('#events').empty();
+        list = document.getElementById('events');
+
+        data.map(function(el){
+          // main
+          div_main = document.createElement('div');
+          div_main.className = 'card';
 
 
+          //header
+          div_header = document.createElement('div');
+          div_header.className = 'card-header';
+          h_head = document.createElement('h5');
+          p_f_head = document.createElement('p');
+          p_l_head = document.createElement('p');
+          header_first = document.createTextNode('Имя: ' + el.id_client.first_name);
+          header_last = document.createTextNode('Фамилия: ' + el.id_client.last_name);
+          p_f_head.appendChild(header_first);
+          p_l_head.appendChild(header_last);
+          h_head.appendChild(p_f_head);
+          h_head.appendChild(p_l_head);
+          div_header.appendChild(h_head);
 
-<script>
-    function worker(){
-         var url =  'api/events';
-
-         $.ajax({
-          type:'get',
-          url: url,
-          async: true,
-          success: function(data) {
-          var html = JSON.stringify(data, null, 2)
-
-<!--          $("#events").html("<p>" + data + "</p>");-->
-
-            var list = document.getElementById('events');
-
-            data.map(function (el) {
-                var div_card = document.createElement('div');
-                div_card.className = 'card';
-
-                var div_header = document.createElement('div');
-                div_header.className = 'card-header';
-                var header = document.createTextNode('Имя: ' + el.id_client.first_name + ' Фамилия: ' + el.id_client.last_name);
-                div_header.appendChild(header);
-
-                var div_body = document.createElement('div');
-                div_body.className = 'card-body';
-                console.log(el)
-                el.id_client.phones.map(function (phone) {
-
-                    var body = document.createTextNode('Телефон: ' + phone);
-                    div_body.appendChild(body);
-                });
-                var body = document.createTextNode('Статус: ' + el.id_status);
-                    div_body.appendChild(body);
-
-                div_card.appendChild(div_header);
-                div_card.appendChild(div_body);
-<!--                var contact_name = document.createTextNode('Имя:' + el.name);-->
-<!--                var contact_email = document.createTextNode('Email:' + el.email);-->
-<!--                div_contact.appendChild(contact_info);-->
-<!--                div_contact.appendChild(document.createElement("p"));-->
-<!--                div_contact.appendChild(contact_name);-->
-<!--                div_contact.appendChild(document.createElement("br"));-->
-<!--                div_contact.appendChild(contact_email);-->
-<!--                div_contact.appendChild(document.createElement("br"));-->
-<!--                var img = document.createElement("img");-->
-<!--                img.src = el.avatar;-->
-<!--                div_contact.appendChild(img);-->
-<!--                list.appendChild(div_card);-->
-                    list.innerHTML=div_card.innerHTML;
-
-            });
-          },
-                complete: function() {
-                setTimeout(worker, 3000);
-               }
+          //body
+          div_body = document.createElement('div');
+          div_body.className = 'card-body';
+          el.id_client.phones.map(function (phone) {
+              p_phone = document.createElement('p');
+              phone = document.createTextNode('Телефон: ' + phone);
+              p_phone.appendChild(phone);
+              div_body.appendChild(p_phone);
           });
-         }
-         $(document).ready(function(){
-         setTimeout(worker, 3000);
-         });
+
+          p_discription = document.createElement('p');
+          discription = document.createTextNode('Описание: ' + el.id_client.description);
+          p_discription.appendChild(discription);
+          div_body.appendChild(p_discription);
+
+          p_status = document.createElement('p');
+          status_phone = document.createTextNode('Статус зваонка: ' + el.id_status)
+          p_status.appendChild(status_phone);
+          div_body.appendChild(p_status);
+
+
+          p_main = document.createElement('p');
+
+          div_main.appendChild(div_header);
+          div_main.appendChild(div_body);
+          p_main.appendChild(div_main)
+          list.appendChild(p_main)
+
+        });
+
+      },
+      complete: function(){
+        setTimeout(worker, 3000);
+      }
+    });
+  }
+
+  // $(document).ready(function(){
+  //   worker();
+  // });
+
+
 </script>
 {% endblock %}

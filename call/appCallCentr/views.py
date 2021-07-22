@@ -6,7 +6,6 @@ from django.http import HttpResponseRedirect
 
 
 def index(request):
-    data = {'puk': 123}
     # data = Events.objects.all().values()
     #
     # for levent in data:
@@ -15,11 +14,11 @@ def index(request):
     #         levent["card"] = ClientNumber.objects.get(phone_number=int(levent["number"])).client_id
     #     else:
     #         levent["card"] = levent["number"]
-    return render(request, 'appCallCentr/index.html', {"data": data})
+    return render(request, 'appCallCentr/index.html')
 
 
 def editing_contact(request, pk):
-    pass
+    return render(request, 'appCallCentr/editing.html')
     # if request.method == 'POST':
     #     form = AddContactForm(request.POST or None)
     #     if form.is_valid():
@@ -75,8 +74,4 @@ def contact_book(request):
 
 
 def contacts_book(request):
-    pass
-    # dict_contact = {}
-    # for obj_field in Client.objects.all():
-    #     dict_contact[obj_field] = list(ClientNumber.objects.filter(client_id=obj_field.id))
-    # return render(request, 'appCallCentr/contact_book.html', {"dict_contact": dict_contact})
+    return render(request, 'appCallCentr/contact_book.html')

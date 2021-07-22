@@ -7,6 +7,7 @@ from .models import Events, Clients, ClientPhones, EmployeesPhones
 from django.forms.models import model_to_dict
 
 
+# добавление ивента (звонков)
 class EventsViews(mixins.UpdateModelMixin, generics.ListCreateAPIView):
     queryset = Events.objects.all()
     serializer_class = serializers.EventsSerializer
@@ -24,15 +25,13 @@ class EventsViews(mixins.UpdateModelMixin, generics.ListCreateAPIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
-# class ClientCard(generics.RetrieveUpdateDestroyAPIView):
-#     queryset = Clients.objects.all()
-#     serializer_class = serializers.ClientsSerializer
-
+# все карточки клиентов и их добавление
 class ClientCardCreateGet(generics.ListCreateAPIView):
     queryset = Clients.objects.all()
     serializer_class = serializers.ClientsSerializer
 
 
+# изменить или удалить определенную карточку клиента
 class ClientCardEditingDelete(generics.RetrieveUpdateDestroyAPIView):
     queryset = Clients.objects.all()
     serializer_class = serializers.ClientsTestSerializer

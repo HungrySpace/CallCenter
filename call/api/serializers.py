@@ -3,19 +3,13 @@ from .models import Events, ClientPhones, Clients, EmployeesPhones, Employee, St
 from rest_framework.response import Response
 
 
+# для сбора номеров из базы у определенной карточки
 def get_phones(instance):
     try:
         phones = [i["phone_number"] for i in instance.phones.all().values()]
     except:
         phones = None
     return phones
-
-
-class ClientPhonesSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = ClientPhones
-        fields = "__all__"
 
 
 class ClientsTestSerializer(serializers.ModelSerializer):
@@ -49,7 +43,6 @@ class ClientsTestSerializer(serializers.ModelSerializer):
                 else:
                     ClientPhones.objects.get(phone_number=phone).delete()
         inst = super().update(instance, validated_data)
-
         return inst
 
 
@@ -60,13 +53,12 @@ class ClientsSerializer(serializers.ModelSerializer):
         fields = ("id", "first_name", "last_name", "description")
 
     def to_representation(self, instance):
-        # объекты в примитивы
         inst = super().to_representation(instance)
-        # при гет запросе все ок, но при пост теряет телефоны...
         phones = get_phones(instance)
         if phones:
             inst["phones"] = phones
-
+        else:
+            inst["phones"] = []
         return inst
 
     def to_internal_value(self, data):
@@ -95,7 +87,6 @@ class EmployeeSerializer(serializers.ModelSerializer):
         fields = ("first_name", "last_name", "description", "id_position")
 
     def to_representation(self, instance):
-        # объекты в примитив
         inst = super().to_representation(instance)
         dict_phones = {}
         for em_phone in instance.phones.all():
@@ -138,7 +129,7 @@ class EventsSerializer(serializers.ModelSerializer):
                 employee = Employee.objects.create(id_position=position[0])
                 employee_phone = EmployeesPhones.objects.create(sip_phone=number_employee, id_employee=employee)
                 group_name = GroupName.objects.get_or_create(name='ALL')
-                group = Group.objects.create(id_group_name=group_name[0], id_employees_phones=employee_phone)
+                Group.objects.create(id_group_name=group_name[0], id_employees_phones=employee_phone)
             ret['id_employee'] = employee_phone.id_employee
         return ret
 
